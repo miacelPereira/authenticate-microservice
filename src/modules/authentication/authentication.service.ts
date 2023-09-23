@@ -3,12 +3,12 @@ import { PrismaService } from "src/providers/postgres/prisma.service";
 import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
 import {
-  CreateAuthenticateDTO,
-  DeleteAuthenticateDTO,
-} from "./authenticate.dto";
+  CreateAuthenticationDTO,
+  DeleteAuthenticationDTO,
+} from "./authentication.dto";
 
 @Injectable()
-export class AuthenticateService {
+export class AuthenticationService {
   constructor(
     private readonly prisma: PrismaService,
     private jwtService: JwtService
@@ -40,7 +40,7 @@ export class AuthenticateService {
   async create({
     email,
     password,
-  }: CreateAuthenticateDTO): Promise<{ access_token: string }> {
+  }: CreateAuthenticationDTO): Promise<{ access_token: string }> {
     const { userExternalId, userId } = await this.validateUser({
       email,
       password,
@@ -67,11 +67,11 @@ export class AuthenticateService {
   }
 
   async delete({
-    authenticateOrUserId,
-  }: DeleteAuthenticateDTO): Promise<{ success: boolean }> {
-    const where = !!Number(authenticateOrUserId)
-      ? { userId: Number(authenticateOrUserId) }
-      : { value: authenticateOrUserId };
+    authenticationOrUserId,
+  }: DeleteAuthenticationDTO): Promise<{ success: boolean }> {
+    const where = !!Number(authenticationOrUserId)
+      ? { userId: Number(authenticationOrUserId) }
+      : { value: authenticationOrUserId };
 
     const token = await this.prisma.token.deleteMany({
       where,
@@ -80,18 +80,18 @@ export class AuthenticateService {
     return { success: !!token.count };
   }
 
-  async validate(authenticate: string) {
-    if (!authenticate) {
+  async validate(authentication: string) {
+    if (!authentication) {
       throw new HttpException(
         "It is necessary to inform the token.",
         HttpStatus.UNAUTHORIZED
       );
     }
 
-    const authenticateWithoutPrefix = authenticate.replace("Bearer ", "");
+    const authenticationWithoutPrefix = authentication.replace("Bearer ", "");
 
     const token = await this.prisma.token.findFirst({
-      where: { value: authenticateWithoutPrefix },
+      where: { value: authenticationWithoutPrefix },
       include: { user: true },
     });
 
@@ -100,14 +100,14 @@ export class AuthenticateService {
     }
 
     try {
-      await this.jwtService.verifyAsync(authenticateWithoutPrefix, {
+      await this.jwtService.verifyAsync(authenticationWithoutPrefix, {
         secret: process.env.JWT_SECRET,
       });
 
       return { userId: token.user.id };
     } catch (error) {
       await this.prisma.token.deleteMany({
-        where: { value: authenticateWithoutPrefix },
+        where: { value: authenticationWithoutPrefix },
       });
 
       throw new HttpException("Expired token.", HttpStatus.UNAUTHORIZED);

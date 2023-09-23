@@ -1,6 +1,6 @@
 import { IsJWT, IsString } from "class-validator";
 
-export class CreateAuthenticateDTO {
+export class CreateAuthenticationDTO {
   @IsString()
   email: string;
 
@@ -8,12 +8,12 @@ export class CreateAuthenticateDTO {
   password: string;
 }
 
-export class DeleteAuthenticateDTO {
+export class DeleteAuthenticationDTO {
   @IsString()
-  authenticateOrUserId: string;
+  authenticationOrUserId: string;
 }
 
-export class ValidateAuthenticateDTO {
+export class ValidateAuthenticationDTO {
   @IsJWT()
   Authorization: string;
 }
