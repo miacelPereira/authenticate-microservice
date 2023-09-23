@@ -4,7 +4,7 @@
 Esse projeto tem como intuito servir como base para um microserviço de autenticação, sendo que é permitido o uso do mesmo, sendo ele modificado ou não. 
 
 ### Usabilidade
-Podemos considerar vários usos para um microserviço de autenticação, contudo criei esse microserviço pensando em um cenário onde mais de uma aplicação precisa realizar autenticação usando o mesmo banco de dados e usuários, portanto, esse microserviço é uma centralização das autenticação de um ou mais serviços.
+Podemos considerar vários usos para um microserviço de autenticação, contudo criei esse microserviço pensando em um cenário onde mais de uma aplicação precisa realizar autenticação usando o mesmo dados de usuários, portanto, esse microserviço é uma centralização das autenticação de um ou mais serviços.
 
 ### Métodos
 
