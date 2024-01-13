@@ -25,7 +25,7 @@ export class AuthenticationController {
     return this.authenticationService.create(createAuthenticationBody);
   }
 
-  @Delete(":autenticationOrUserId")
+  @Delete(":authenticationOrUserId")
   async delete(@Param() param: DeleteAuthenticationDTO) {
     return this.authenticationService.delete(param);
   }

@@ -6,11 +6,14 @@ import {
   CreateAuthenticationDTO,
   DeleteAuthenticationDTO,
 } from "./authentication.dto";
+import { UserRepository } from "src/repositories/user.repository";
+import { TokenRepository } from "src/repositories/token.repository";
 
 @Injectable()
 export class AuthenticationService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly userRepository: UserRepository,
+    private readonly tokenRepository: TokenRepository,
     private jwtService: JwtService
   ) {}
 
@@ -18,11 +21,7 @@ export class AuthenticationService {
     email,
     password,
   }): Promise<{ userExternalId: number; userId: number }> {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email,
-      },
-    });
+    const user = await this.userRepository.findFirst({ email });
 
     if (!user) {
       throw new HttpException("User do not exists.", HttpStatus.NOT_FOUND);
@@ -53,17 +52,14 @@ export class AuthenticationService {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
 
-    await this.prisma.token.create({
-      data: {
-        value: accessToken,
-        userId,
-      },
+    await this.tokenRepository.create({
+      value: accessToken,
+      userId
     });
 
     return {
       access_token: accessToken,
     };
-    return;
   }
 
   async delete({
@@ -73,9 +69,7 @@ export class AuthenticationService {
       ? { userId: Number(authenticationOrUserId) }
       : { value: authenticationOrUserId };
 
-    const token = await this.prisma.token.deleteMany({
-      where,
-    });
+    const token = await this.tokenRepository.deleteMany(where);
 
     return { success: !!token.count };
   }
@@ -90,9 +84,8 @@ export class AuthenticationService {
 
     const authenticationWithoutPrefix = authentication.replace("Bearer ", "");
 
-    const token = await this.prisma.token.findFirst({
-      where: { value: authenticationWithoutPrefix },
-      include: { user: true },
+    const token = await this.tokenRepository.findFirst({ 
+      value: authenticationWithoutPrefix
     });
 
     if (!token) {
@@ -104,10 +97,10 @@ export class AuthenticationService {
         secret: process.env.JWT_SECRET,
       });
 
-      return { userId: token.user.id };
+      return { userId: token.userId };
     } catch (error) {
-      await this.prisma.token.deleteMany({
-        where: { value: authenticationWithoutPrefix },
+      await this.tokenRepository.deleteMany({
+        value: authenticationWithoutPrefix
       });
 
       throw new HttpException("Expired token.", HttpStatus.UNAUTHORIZED);
